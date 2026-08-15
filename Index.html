@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>سِرب - هويتي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .box {
+            background: #1a1f35;
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            text-align: center;
+        }
+        button {
+            background: #7b2ffc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            width: 100%;
+        }
+        button:hover {
+            background: #5a1fb0;
+        }
+        .info {
+            background: #0d1225;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            word-wrap: break-word;
+            font-size: 14px;
+            color: #a0aec0;
+        }
+        .status {
+            color: #68d391;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🚀 سِرب</h1>
+        <p>هويتك الرقمية</p>
+
+        <div id="statusMessage" class="status">🔹 اضغط "إنشاء هوية"</div>
+
+        <div class="info" id="didDisplay">
+            لا توجد هوية
+        </div>
+
+        <button onclick="createIdentity()">🌟 إنشاء هوية جديدة</button>
+        <button onclick="saveIdentity()" style="background: #2d3748;">💾 حفظ الهوية</button>
+        <button onclick="loadIdentity()" style="background: #2d3748;">📂 تحميل هوية محفوظة</button>
+    </div>
+
+    <script>
+        // هذا الكود يعمل مباشرة بدون أي مكتبات خارجية
+
+        let myIdentity = {
+            did: null,
+            name: null
+        };
+
+        // دالة عرض رسائل
+        function showMessage(text, isGood = true) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = text;
+            el.style.color = isGood ? '#68d391' : '#fc8181';
+        }
+
+        // دالة إنشاء هوية
+        function createIdentity() {
+            // نولد معرف فريد بطريقة بسيطة
+            const random = Math.random().toString(36).substring(2, 10);
+            const time = Date.now().toString(36);
+            const did = `did:sirb:${time}-${random}`;
+
+            myIdentity.did = did;
+            myIdentity.name = 'مستخدم_' + random.substring(0, 4);
+
+            // نعرض الهوية في الواجهة
+            document.getElementById('didDisplay').innerHTML = `
+                <strong>المعرف:</strong> ${did}<br>
+                <strong>الاسم:</strong> ${myIdentity.name}
+            `;
+
+            showMessage('✅ تم إنشاء هويتك بنجاح!');
+            
+            // نحفظها تلقائياً في المتصفح
+            saveIdentity();
+        }
+
+        // دالة حفظ الهوية
+        function saveIdentity() {
+            if (!myIdentity.did) {
+                showMessage('⚠️ أنشئ هوية أولاً', false);
+                return;
+            }
+            localStorage.setItem('sirb_identity', JSON.stringify(myIdentity));
+            showMessage('💾 تم حفظ الهوية في المتصفح');
+        }
+
+        // دالة تحميل الهوية
+        function loadIdentity() {
+            const saved = localStorage.getItem('sirb_identity');
+            if (!saved) {
+                showMessage('⚠️ لا توجد هوية محفوظة', false);
+                return;
+            }
+            myIdentity = JSON.parse(saved);
+            document.getElementById('didDisplay').innerHTML = `
+                <strong>المعرف:</strong> ${myIdentity.did}<br>
+                <strong>الاسم:</strong> ${myIdentity.name}
+            `;
+            showMessage('📂 تم تحميل الهوية المحفوظة');
+        }
+
+        // عند فتح الصفحة، نحاول تحميل هوية سابقة
+        window.onload = function() {
+            loadIdentity();
+        };
+    </script>
+</body>
+</html>
