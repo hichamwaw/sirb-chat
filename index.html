@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سِرب - دردشة مشفرة</title>
+    <!-- إضافة خطوط جميلة من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== إعدادات عامة ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        /* ===== الحاوية الرئيسية ===== */
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 28px;
+            padding: 30px;
+            width: 100%;
+            max-width: 580px;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        /* ===== الهيدر ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.4);
+        }
+        .user-badge {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #a0aec0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .user-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== أزرار التحكم ===== */
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .controls button {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.04);
+            color: #cbd5e0;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            min-width: 70px;
+        }
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        .controls button:active {
+            transform: scale(0.97);
+        }
+        .controls .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+        .controls .btn-primary:hover {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .controls .btn-danger {
+            background: rgba(245, 87, 108, 0.15);
+            color: #fc8181;
+            border: 1px solid rgba(245, 87, 108, 0.15);
+        }
+        .controls .btn-danger:hover {
+            background: rgba(245, 87, 108, 0.25);
+        }
+
+        /* ===== حالة الاتصال ===== */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .status-text {
+            color: #a0aec0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-text .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #718096;
+            transition: all 0.5s ease;
+        }
+        .status-text .indicator.online {
+            background: #48bb78;
+            box-shadow: 0 0 15px rgba(72, 187, 120, 0.3);
+        }
+        .status-text .indicator.connecting {
+            background: #ecc94b;
+            animation: pulse 1s infinite;
+        }
+        .status-text .indicator.offline {
+            background: #fc8181;
+        }
+        .status-key {
+            font-size: 11px;
+            color: #718096;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            direction: ltr;
+            text-align: left;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== صناديق المعلومات ===== */
+        .info-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+        }
+        .info-box .label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+        .info-box .value {
+            font-size: 13px;
+            color: #a0aec0;
+            font-weight: 500;
+            word-break: break-all;
+            flex: 1;
+            text-align: left;
+            direction: ltr;
+        }
+        .info-box .value.ar {
+            direction: rtl;
+            text-align: right;
+        }
+        .info-box .copy-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #a0aec0;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .info-box .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+        .info-box.highlight {
+            border-color: rgba(72, 187, 120, 0.2);
+            background: rgba(72, 187, 120, 0.04);
+        }
+        .info-box .key-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #48bb78;
+            direction: ltr;
+            text-align: left;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== منطقة الدردشة ===== */
+        .chat-area {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            height: 280px;
+            overflow-y: auto;
+            margin: 10px 0 12px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            scroll-behavior: smooth;
+        }
+        .chat-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        /* ===== فقاعات الرسائل ===== */
+        .message {
+            padding: 10px 16px;
+            border-radius: 16px;
+            max-width: 82%;
+            word-wrap: break-word;
+            animation: slideUp 0.25s ease;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .message.me {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: white;
+        }
+        .message.other {
+            background: rgba(255, 255, 255, 0.06);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .message.system {
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+            padding: 6px 12px;
+            max-width: 100%;
+            background: none;
+            align-self: center;
+            animation: none;
+        }
+        .message.encrypted {
+            border-right: 3px solid #48bb78;
+        }
+        .message .sender {
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.7;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .message .sender .badge {
+            font-size: 9px;
+            background: rgba(72, 187, 120, 0.2);
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: #48bb78;
+        }
+        .message .time {
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 4px;
+            text-align: left;
+            direction: ltr;
+        }
+        .message.me .time {
+            text-align: right;
+        }
+        .message .text-content {
+            word-break: break-word;
+        }
+
+        /* ===== الإدخال والإرسال ===== */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.25);
+            color: white;
+            font-size: 15px;
+            font-family: 'Tajawal', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .input-row input:focus {
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.05);
+        }
+        .input-row input::placeholder {
+            color: #4a5568;
+        }
+        .input-row input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .input-row button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            white-space: nowrap;
+        }
+        .input-row button:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        .input-row button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .input-row button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        /* ===== الرابط السفلي ===== */
+        .footer-link {
+            text-align: center;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .footer-link a {
+            color: #718096;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .footer-link a:hover {
+            color: #a0aec0;
+        }
+
+        /* ===== حالة الخفاء ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== رسالة فارغة ===== */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #4a5568;
+            text-align: center;
+            padding: 20px;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .empty-state .sub {
+            font-size: 12px;
+            color: #2d3748;
+            margin-top: 6px;
+        }
+
+        /* ===== التوافق مع الهواتف ===== */
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+                border-radius: 20px;
+                max-height: 100vh;
+            }
+            .logo h1 {
+                font-size: 20px;
+            }
+            .logo-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 20px;
+            }
+            .controls button {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            .chat-area {
+                height: 200px;
+                padding: 12px;
+            }
+            .message {
+                max-width: 90%;
+                font-size: 13px;
+                padding: 8px 14px;
+            }
+            .input-row input {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .input-row button {
+                padding: 12px 18px;
+                font-size: 14px;
+            }
+            .info-box {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .status-key {
+                max-width: 100px;
+                font-size: 10px;
+            }
+            .user-badge {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            .header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+        @media (max-width: 400px) {
+            .controls button {
+                font-size: 11px;
+                padding: 6px 8px;
+                min-width: 50px;
+            }
+            .container {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- ===== الهيدر ===== -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🔐</div>
+                <div>
+                    <h1>سِرب</h1>
+                    <span>دردشة مشفرة</span>
+                </div>
+            </div>
+            <div class="user-badge">
+                <span class="dot"></span>
+                <span id="userNameDisplay">مستخدم</span>
+            </div>
+        </div>
+
+        <!-- ===== أزرار التحكم ===== -->
+        <div class="controls">
+            <button id="createRoomBtn" class="btn-primary">🆕 إنشاء غرفة</button>
+            <button id="joinRoomBtn" class="btn-primary">🔗 انضم لغرفة</button>
+            <button id="disconnectBtn" class="btn-danger">🚪 قطع الاتصال</button>
+        </div>
+
+        <!-- ===== شريط الحالة ===== -->
+        <div class="status-bar">
+            <div class="status-text">
+                <span class="indicator offline" id="statusIndicator"></span>
+                <span id="statusDisplay">غير متصل</span>
+            </div>
+            <div class="status-key" id="keyDisplay">🔑 لا يوجد مفتاح</div>
+        </div>
+
+        <!-- ===== معرف المستخدم ===== -->
+        <div id="myIdBox" class="info-box hidden">
+            <span class="label">🆔 معرفك:</span>
+            <span class="value" id="myPeerId">...</span>
+            <button class="copy-btn" id="copyIdBtn">📋 نسخ</button>
+        </div>
+
+        <!-- ===== مفتاح التشفير ===== -->
+        <div id="keyBox" class="info-box highlight hidden">
+            <span class="label">🔑 مفتاح التشفير:</span>
+            <span class="value key-display" id="encryptionKey">...</span>
+            <button class="copy-btn" id="copyKeyBtn">📋 نسخ</button>
+        </div>
+
+        <!-- ===== الاتصال بالآخر ===== -->
+        <div id="connectBox" class="hidden" style="margin:8px 0;">
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="targetIdInput" placeholder="أدخل معرف الطرف الآخر" style="flex:1; padding:12px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.25); color:white; font-family:'Tajawal',sans-serif; outline:none;">
+                <button id="connectBtn" style="padding:12px 24px; border:none; border-radius:14px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; font-weight:600; cursor:pointer; font-family:'Tajawal',sans-serif;">اتصال</button>
+            </div>
+        </div>
+
+        <!-- ===== منطقة الدردشة ===== -->
+        <div class="chat-area" id="chatMessages">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">💬</div>
+                <p>أنشئ غرفة أو انضم إلى غرفة<br>لبدء الدردشة المشفرة</p>
+                <div class="sub">🔐 جميع الرسائل مشفرة</div>
+            </div>
+        </div>
+
+        <!-- ===== حقل الإدخال ===== -->
+        <div class="input-row">
+            <input type="text" id="messageInput" placeholder="اكتب رسالتك..." disabled>
+            <button id="sendBtn" disabled>إرسال</button>
+        </div>
+
+        <!-- ===== رابط العودة ===== -->
+        <div class="footer-link">
+            <a href="#" id="backToIdentity">← العودة إلى الهوية</a>
+        </div>
+    </div>
+
+    <!-- تحميل PeerJS -->
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+
+    <script>
+        // =========================================
+        // كود الدردشة المشفرة - النسخة المحسنة
+        // =========================================
+
+        // ===== المتغيرات =====
+        let peer = null;
+        let connection = null;
+        let username = 'مستخدم';
+        let isConnected = false;
+        let encryptionKey = null;
+        let isEncryptionReady = false;
+
+        // ===== عناصر الواجهة =====
+        const chatArea = document.getElementById('chatMessages');
+        const emptyState = document.getElementById('emptyState');
+        const msgInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const myIdBox = document.getElementById('myIdBox');
+        const myPeerId = document.getElementById('myPeerId');
+        const connectBox = document.getElementById('connectBox');
+        const targetIdInput = document.getElementById('targetIdInput');
+        const keyBox = document.getElementById('keyBox');
+        const encryptionKeyDisplay = document.getElementById('encryptionKey');
+        const keyDisplay = document.getElementById('keyDisplay');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+
+        // ===== تحميل الاسم من الهوية =====
+        try {
+            const saved = localStorage.getItem('sirb_identity');
+            if (saved) {
+                const identity = JSON.parse(saved);
+                if (identity.name) {
+                    username = identity.name;
+                    userNameDisplay.textContent = username;
+                }
+            }
+        } catch(e) {}
+
+        // =========================================
+        // دوال التشفير (تدعم العربية)
+        // =========================================
+
+        function generateKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let key = '';
+            for (let i = 0; i < 32; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        function encryptText(text, key) {
+            const utf8Bytes = new TextEncoder().encode(text);
+            let binary = '';
+            for (let i = 0; i < utf8Bytes.length; i++) {
+                binary += String.fromCharCode(utf8Bytes[i]);
+            }
+            const base64 = btoa(binary);
+            let encrypted = '';
+            for (let i = 0; i < base64.length; i++) {
+                const charCode = base64.charCodeAt(i);
+                const keyChar = key.charCodeAt(i % key.length);
+                encrypted += String.fromCharCode(charCode ^ keyChar);
+            }
+            return btoa(encrypted);
+        }
+
+        function decryptText(encryptedBase64, key) {
+            try {
+                const encrypted = atob(encryptedBase64);
+                let decrypted = '';
+                for (let i = 0; i < encrypted.length; i++) {
+                    const charCode = encrypted.charCodeAt(i);
+                    const keyChar = key.charCodeAt(i % key.length);
+                    decrypted += String.fromCharCode(charCode ^ keyChar);
+                }
+                const base64 = atob(decrypted);
+                const bytes = new Uint8Array(base64.length);
+                for (let i = 0; i < base64.length; i++) {
+                    bytes[i] = base64.charCodeAt(i);
+                }
+                return new TextDecoder().decode(bytes);
+            } catch(e) {
+                return '[❌ خطأ في فك التشفير]';
+            }
+        }
+
+        // ===== دوال عرض الرسائل =====
+        function displayMessage(text, sender, isMe, isEncrypted = false) {
+            if (emptyState) emptyState.style.display = 'none';
+
+            const div = document.createElement('div');
+            div.className = 'message ' + (isMe ? 'me' : 'other');
+            if (isEncrypted) {
+                div.classList.add('encrypted');
+            }
+
+            const senderLabel = isMe ? 'أنت' : sender;
+            const badge = isEncrypted ? '<span class="badge">🔒</span>' : '';
+            const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+
+            div.innerHTML = `
+                <div class="sender">${senderLabel} ${badge}</div>
+                <div class="text-content">${text}</div>
+                <div class="time">${time}</div>
+            `;
+
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            if (emptyState) emptyState.style.display = 'none';
+
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function setStatus(text, state = 'offline') {
+            statusDisplay.textContent = text;
+            statusIndicator.className = 'indicator ' + state;
+        }
+
+        // ===== دوال PeerJS =====
+        function createRoom() {
+            console.log('🟢 زر إنشاء الغرفة تم الضغط عليه!');
+            
+            if (peer) { 
+                peer.destroy(); 
+                peer = null; 
+            }
+
+            encryptionKey = generateKey();
+            encryptionKeyDisplay.textContent = encryptionKey;
+            keyBox.classList.remove('hidden');
+            keyDisplay.textContent = '🔑 مفتاح: ' + encryptionKey.substring(0, 8) + '...';
+            isEncryptionReady = true;
+
+            peer = new Peer({
+                debug: 0,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', function(id) {
+                console.log('🆔 تم فتح Peer، المعرف:', id);
+                myPeerId.textContent = id;
+                myIdBox.classList.remove('hidden');
+                connectBox.classList.remove('hidden');
+                setStatus(`✅ جاهز! معرفك: ${id}`, 'online');
+                addSystemMessage(`🎉 تم إنشاء غرفة مشفرة!`);
+                addSystemMessage(`🔑 المفتاح: ${encryptionKey}`);
+                addSystemMessage(`📋 انسخ المعرف والمفتاح وأرسلهما للآخر`);
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+            });
+
+            peer.on('connection', function(conn) {
+                console.log('🔗 تم استقبال اتصال جديد!');
+                connection = conn;
+                setupConnection(conn, true);
+                addSystemMessage(`🔗 شخص ما يتصل بك...`);
+            });
+
+            peer.on('error', function(err) {
+                console.error('❌ خطأ في Peer:', err);
+                addSystemMessage(`❌ خطأ: ${err.message}`);
+            });
+        }
+
+        function joinRoom() {
+            console.log('🟢 زر الانضمام للغرفة تم الضغط عليه!');
+            
+            if (peer) { 
+                peer.destroy(); 
+                peer = null; 
+            }
+
+            const key = prompt('🔑 أدخل مفتاح التشفير الذي أعطاك إياه الطرف الآخر:');
+            if (!key || key.length < 10) {
+                addSystemMessage('⚠️ مفتاح غير صحيح، حاول مرة أخرى');
+                return;
+            }
+            encryptionKey = key;
+            encryptionKeyDisplay.textContent = encryptionKey;
+            keyBox.classList.remove('hidden');
+            keyDisplay.textContent = '🔑 مفتاح: ' + key.substring(0, 8) + '...';
+            isEncryptionReady = true;
+
+            peer = new Peer({
+                debug: 0,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', function(id) {
+                console.log('🆔 تم فتح Peer، المعرف:', id);
+                myPeerId.textContent = id;
+                myIdBox.classList.remove('hidden');
+                connectBox.classList.remove('hidden');
+                setStatus(`✅ جاهز! معرفك: ${id}`, 'online');
+                addSystemMessage(`🎉 أنت جاهز للاتصال المشفر!`);
+                addSystemMessage(`🔑 المفتاح: ${encryptionKey}`);
+                addSystemMessage(`📋 أدخل معرف الطرف الآخر و اضغط "اتصال"`);
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+            });
+
+            peer.on('error', function(err) {
+                console.error('❌ خطأ في Peer:', err);
+                addSystemMessage(`❌ خطأ: ${err.message}`);
+            });
+        }
+
+        function connectToPeer() {
+            const targetId = targetIdInput.value.trim();
+            if (!targetId) {
+                addSystemMessage('⚠️ أدخل معرف الطرف الآخر');
+                return;
+            }
+            if (!peer) {
+                addSystemMessage('⚠️ أنشئ غرفة أولاً');
+                return;
+            }
+            if (!isEncryptionReady || !encryptionKey) {
+                addSystemMessage('⚠️ مفتاح التشفير غير جاهز');
+                return;
+            }
+
+            addSystemMessage(`🔗 جاري الاتصال المشفر بـ ${targetId}...`);
+            setStatus(`جاري الاتصال...`, 'connecting');
+            
+            const conn = peer.connect(targetId);
+            setupConnection(conn, false);
+        }
+
+        function setupConnection(conn, isHost) {
+            connection = conn;
+
+            conn.on('open', function() {
+                console.log('✅ تم فتح الاتصال!');
+                isConnected = true;
+                setStatus('✅ متصل! (مشفر)', 'online');
+                msgInput.disabled = false;
+                sendBtn.disabled = false;
+                connectBox.classList.add('hidden');
+                addSystemMessage('🎉 تم الاتصال! الدردشة مشفرة بالكامل 🔐');
+                addSystemMessage(`🔑 المفتاح: ${encryptionKey}`);
+
+                const encryptedName = encryptText(username, encryptionKey);
+                conn.send({ type: 'join', sender: encryptedName });
+            });
+
+            conn.on('data', function(data) {
+                try {
+                    if (data.type === 'message') {
+                        const decryptedText = decryptText(data.text, encryptionKey);
+                        const decryptedSender = decryptText(data.sender, encryptionKey);
+                        displayMessage(decryptedText, decryptedSender, false, true);
+                    } else if (data.type === 'join') {
+                        const decryptedSender = decryptText(data.sender, encryptionKey);
+                        addSystemMessage(`👋 ${decryptedSender} انضم للدردشة المشفرة 🔐`);
+                    }
+                } catch(e) {
+                    console.error('خطأ في فك التشفير:', e);
+                    addSystemMessage('⚠️ استلمت رسالة غير قابلة للفك');
+                }
+            });
+
+            conn.on('close', function() {
+                console.log('🔴 تم قطع الاتصال');
+                isConnected = false;
+                setStatus('❌ تم قطع الاتصال', 'offline');
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+                connectBox.classList.remove('hidden');
+                addSystemMessage('🚪 تم قطع الاتصال');
+            });
+
+            conn.on('error', function(err) {
+                console.error('❌ خطأ في الاتصال:', err);
+                addSystemMessage(`❌ خطأ في الاتصال: ${err.message}`);
+            });
+        }
+
+        // ===== إرسال رسالة =====
+        function sendMessage() {
+            const text = msgInput.value.trim();
+            if (!text) {
+                addSystemMessage('⚠️ اكتب رسالة أولاً');
+                return;
+            }
+            if (!connection || !isConnected) {
+                addSystemMessage('⚠️ أنت غير متصل بأي شخص');
+                return;
+            }
+            if (!isEncryptionReady || !encryptionKey) {
+                addSystemMessage('⚠️ مفتاح التشفير غير جاهز');
+                return;
+            }
+
+            try {
+                const encryptedText = encryptText(text, encryptionKey);
+                const encryptedSender = encryptText(username, encryptionKey);
+
+                connection.send({
+                    type: 'message',
+                    text: encryptedText,
+                    sender: encryptedSender
+                });
+
+                displayMessage(text, username, true, true);
+                msgInput.value = '';
+                msgInput.focus();
+            } catch(e) {
+                console.error('❌ خطأ في الإرسال:', e);
+                addSystemMessage(`❌ خطأ في الإرسال: ${e.message}`);
+            }
+        }
+
+        // ===== قطع الاتصال =====
+        function disconnect() {
+            console.log('🔴 قطع الاتصال');
+            if (connection) { 
+                connection.close(); 
+                connection = null; 
+            }
+            if (peer) { 
+                peer.destroy(); 
+                peer = null; 
+            }
+            isConnected = false;
+            isEncryptionReady = false;
+            encryptionKey = null;
+            setStatus('🔹 غير متصل', 'offline');
+            msgInput.disabled = true;
+            sendBtn.disabled = true;
+            myIdBox.classList.add('hidden');
+            connectBox.classList.add('hidden');
+            keyBox.classList.add('hidden');
+            keyDisplay.textContent = '🔑 لا يوجد
