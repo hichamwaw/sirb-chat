@@ -896,6 +896,66 @@
         addSystemMessage('✅ مرحباً بك في سِرب!');
         addSystemMessage('💡 أنشئ غرفة أو انضم إلى غرفة للبدء');
         addSystemMessage('🔄 يستخدم خادم PeerJS مضمون');
+    <script>
+    // تسجيل Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(() => console.log('✅ Service Worker مسجل'))
+            .catch(err => console.error('❌ فشل تسجيل Service Worker:', err));
+    }
+
+    // طلب تثبيت PWA (عند تحميل الصفحة)
+    window.addEventListener('load', () => {
+        // التحقق إذا كان التطبيق مثبتاً بالفعل
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('✅ التطبيق يعمل في وضع PWA');
+            return;
+        }
+        
+        // انتظار حدث beforeinstallprompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // إظهار زر تثبيت مخصص
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📲 تثبيت التطبيق';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 16px;
+                cursor: pointer;
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                z-index: 9999;
+                animation: slideUp 0.5s ease;
+            `;
+            
+            installBtn.onclick = () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('✅ تم تثبيت التطبيق');
+                        installBtn.remove();
+                    } else {
+                        console.log('❌ تم رفض التثبيت');
+                        installBtn.remove();
+                    }
+                });
+            };
+            
+            document.body.appendChild(installBtn);
+        });
+    });
+</script>
     </script>
 </body>
 </html>
