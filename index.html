@@ -612,7 +612,7 @@
             if (isEncrypted) div.classList.add('encrypted');
             const senderLabel = isMe ? 'أنت' : sender;
             const badge = isEncrypted ? '<span class="badge">🔒</span>' : '';
-            const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             div.innerHTML = `<div class="sender">${senderLabel} ${badge}</div><div class="text-content">${text}</div><div class="time">${time}</div>`;
             chatArea.appendChild(div);
             chatArea.scrollTop = chatArea.scrollHeight;
