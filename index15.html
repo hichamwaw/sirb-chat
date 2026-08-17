@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سِرب - دردشة مشفرة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #1a1f35;
+            padding: 25px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+        button:hover {
+            transform: scale(1.02);
+        }
+        .btn-primary {
+            background: #7b2ffc;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a1fb0;
+        }
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c53030;
+        }
+        .btn-secondary {
+            background: #2d3748;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+        .chat-area {
+            background: #0d1225;
+            border-radius: 10px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #2d3748;
+        }
+        .message {
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin: 5px 0;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message.me {
+            background: #7b2ffc;
+            margin-left: auto;
+            text-align: right;
+        }
+        .message.other {
+            background: #2d3748;
+        }
+        .message.system {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 12px;
+            max-width: 100%;
+            background: none;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+            background: #0d1225;
+            color: white;
+            font-size: 16px;
+        }
+        .input-row input::placeholder {
+            color: #4a5568;
+        }
+        .input-row input:disabled {
+            opacity: 0.5;
+        }
+        .status {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 14px;
+            padding: 8px;
+            background: #0d1225;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .status.online {
+            color: #48bb78;
+        }
+        .status.offline {
+            color: #fc8181;
+        }
+        .info-box {
+            background: #0d1225;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px 0;
+            font-size: 13px;
+            word-break: break-all;
+            border: 1px solid #2d3748;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .flex {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .flex button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align:center; margin-bottom:10px;">🔐 سِرب</h2>
+        <p style="text-align:center; color:#a0aec0; font-size:14px;">دردشة مشفرة</p>
+
+        <div class="flex">
+            <button id="createBtn" class="btn-primary">🆕 إنشاء غرفة</button>
+            <button id="joinBtn" class="btn-primary">🔗 انضم لغرفة</button>
+            <button id="disconnectBtn" class="btn-danger">🚪 قطع</button>
+        </div>
+
+        <div id="statusDisplay" class="status offline">🔹 غير متصل</div>
+
+        <div id="myIdBox" class="info-box hidden">
+            🆔 معرفك: <span id="myIdDisplay">...</span>
+            <button id="copyIdBtn" class="btn-secondary" style="padding:4px 12px; font-size:12px;">نسخ</button>
+        </div>
+
+        <div id="keyBox" class="info-box hidden">
+            🔑 المفتاح: <span id="keyDisplay">...</span>
+            <button id="copyKeyBtn" class="btn-secondary" style="padding:4px 12px; font-size:12px;">نسخ</button>
+        </div>
+
+        <div id="connectBox" class="hidden" style="margin:10px 0;">
+            <div class="input-row">
+                <input type="text" id="targetInput" placeholder="معرف الطرف الآخر">
+                <button id="connectBtn" class="btn-primary">اتصال</button>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div style="text-align:center; color:#4a5568; padding:20px;">
+                💬 أنشئ أو انضم لغرفة
+            </div>
+        </div>
+
+        <div class="input-row">
+            <input type="text" id="msgInput" placeholder="اكتب رسالتك..." disabled>
+            <button id="sendBtn" disabled>إرسال</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <script>
+        // =========================================
+        // سِرب - نسخة مبسطة جداً
+        // =========================================
+
+        console.log('🚀 سِرب جاهزة!');
+
+        // ===== متغيرات =====
+        var peer = null;
+        var conn = null;
+        var username = 'مستخدم_' + Math.floor(Math.random() * 1000);
+        var encKey = null;
+        var isReady = false;
+        var isConnected = false;
+
+        // ===== عناصر =====
+        var chatArea = document.getElementById('chatArea');
+        var msgInput = document.getElementById('msgInput');
+        var sendBtn = document.getElementById('sendBtn');
+        var statusDisplay = document.getElementById('statusDisplay');
+        var myIdBox = document.getElementById('myIdBox');
+        var myIdDisplay = document.getElementById('myIdDisplay');
+        var keyBox = document.getElementById('keyBox');
+        var keyDisplay = document.getElementById('keyDisplay');
+        var connectBox = document.getElementById('connectBox');
+        var targetInput = document.getElementById('targetInput');
+
+        // ===== دوال التشفير =====
+        function genKey() {
+            var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var key = '';
+            for (var i = 0; i < 32; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        function encrypt(text, key) {
+            var bytes = new TextEncoder().encode(text);
+            var binary = '';
+            for (var i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            var base64 = btoa(binary);
+            var result = '';
+            for (var i = 0; i < base64.length; i++) {
+                result += String.fromCharCode(base64.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return btoa(result);
+        }
+
+        function decrypt(encrypted, key) {
+            try {
+                var data = atob(encrypted);
+                var result = '';
+                for (var i = 0; i < data.length; i++) {
+                    result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+                }
+                var base64 = atob(result);
+                var bytes = new Uint8Array(base64.length);
+                for (var i = 0; i < base64.length; i++) {
+                    bytes[i] = base64.charCodeAt(i);
+                }
+                return new TextDecoder().decode(bytes);
+            } catch(e) {
+                return '[❌]';
+            }
+        }
+
+        // ===== دوال العرض =====
+        function addMessage(text, sender, isMe) {
+            var div = document.createElement('div');
+            div.className = 'message ' + (isMe ? 'me' : 'other');
+            div.innerHTML = '<strong>' + sender + '</strong><br>' + text;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addSystem(text) {
+            var div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function setStatus(text, state) {
+            statusDisplay.textContent = text;
+            statusDisplay.className = 'status ' + (state || 'offline');
+        }
+
+        // ===== دوال PeerJS =====
+        function createRoom() {
+            console.log('🟢 إنشاء غرفة');
+            if (peer) { peer.destroy(); peer = null; }
+
+            encKey = genKey();
+            keyDisplay.textContent = encKey;
+            keyBox.classList.remove('hidden');
+            isReady = true;
+
+            peer = new Peer({
+                debug: 0,
+                host: '0.peerjs.com',
+                port: 443,
+                path: '/',
+                secure: true,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', function(id) {
+                console.log('🆔 المعرف:', id);
+                myIdDisplay.textContent = id;
+                myIdBox.classList.remove('hidden');
+                connectBox.classList.remove('hidden');
+                setStatus('✅ جاهز! معرفك: ' + id, 'online');
+                addSystem('🎉 تم إنشاء غرفة مشفرة!');
+                addSystem('🔑 المفتاح: ' + encKey);
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+            });
+
+            peer.on('connection', function(c) {
+                console.log('🔗 اتصال ورد');
+                conn = c;
+                setupConnection(c);
+                addSystem('🔗 شخص يتصل بك...');
+            });
+
+            peer.on('error', function(err) {
+                console.error('❌ خطأ:', err);
+                addSystem('❌ خطأ: ' + err.message);
+            });
+        }
+
+        function joinRoom() {
+            console.log('🟢 انضم للغرفة');
+            if (peer) { peer.destroy(); peer = null; }
+
+            var key = prompt('🔑 أدخل مفتاح التشفير:');
+            if (!key || key.length < 10) {
+                addSystem('⚠️ مفتاح غير صحيح');
+                return;
+            }
+            encKey = key;
+            keyDisplay.textContent = encKey;
+            keyBox.classList.remove('hidden');
+            isReady = true;
+
+            peer = new Peer({
+                debug: 0,
+                host: '0.peerjs.com',
+                port: 443,
+                path: '/',
+                secure: true,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', function(id) {
+                console.log('🆔 المعرف:', id);
+                myIdDisplay.textContent = id;
+                myIdBox.classList.remove('hidden');
+                connectBox.classList.remove('hidden');
+                setStatus('✅ جاهز! معرفك: ' + id, 'online');
+                addSystem('🎉 أنت جاهز!');
+                addSystem('🔑 المفتاح: ' + encKey);
+                addSystem('📋 أدخل معرف الطرف الآخر');
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+            });
+
+            peer.on('error', function(err) {
+                console.error('❌ خطأ:', err);
+                addSystem('❌ خطأ: ' + err.message);
+            });
+        }
+
+        function connectToPeer() {
+            var target = targetInput.value.trim();
+            if (!target) { addSystem('⚠️ أدخل معرفاً'); return; }
+            if (!peer) { addSystem('⚠️ أنشئ غرفة أولاً'); return; }
+            if (!isReady || !encKey) { addSystem('⚠️ مفتاح غير جاهز'); return; }
+
+            addSystem('🔗 جاري الاتصال بـ ' + target + '...');
+            setStatus('جاري الاتصال...', 'connecting');
+            var c = peer.connect(target);
+            conn = c;
+            setupConnection(c);
+        }
+
+        function setupConnection(c) {
+            c.on('open', function() {
+                console.log('✅ تم الاتصال!');
+                isConnected = true;
+                setStatus('✅ متصل!', 'online');
+                msgInput.disabled = false;
+                sendBtn.disabled = false;
+                connectBox.classList.add('hidden');
+                addSystem('🎉 تم الاتصال! الدردشة مشفرة 🔐');
+                var encryptedName = encrypt(username, encKey);
+                c.send({ type: 'join', sender: encryptedName });
+            });
+
+            c.on('data', function(data) {
+                try {
+                    if (data.type === 'message') {
+                        var text = decrypt(data.text, encKey);
+                        var sender = decrypt(data.sender, encKey);
+                        addMessage(text, sender, false);
+                    } else if (data.type === 'join') {
+                        var sender = decrypt(data.sender, encKey);
+                        addSystem('👋 ' + sender + ' انضم للدردشة');
+                    }
+                } catch(e) {
+                    console.error('خطأ في فك التشفير:', e);
+                    addSystem('⚠️ رسالة غير قابلة للفك');
+                }
+            });
+
+            c.on('close', function() {
+                console.log('🔴 قطع الاتصال');
+                isConnected = false;
+                setStatus('❌ تم القطع', 'offline');
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+                connectBox.classList.remove('hidden');
+                addSystem('🚪 تم قطع الاتصال');
+            });
+
+            c.on('error', function(err) {
+                addSystem('❌ خطأ في الاتصال: ' + err.message);
+            });
+        }
+
+        // ===== إرسال =====
+        function sendMessage() {
+            var text = msgInput.value.trim();
+            if (!text) { addSystem('⚠️ اكتب رسالة'); return; }
+            if (!conn || !isConnected) { addSystem('⚠️ غير متصل'); return; }
+            if (!isReady || !encKey) { addSystem('⚠️ مفتاح غير جاهز'); return; }
+
+            try {
+                var encryptedText = encrypt(text, encKey);
+                var encryptedSender = encrypt(username, encKey);
+                conn.send({ type: 'message', text: encryptedText, sender: encryptedSender });
+                addMessage(text, username, true);
+                msgInput.value = '';
+                msgInput.focus();
+            } catch(e) {
+                console.error('❌ خطأ:', e);
+                addSystem('❌ خطأ في الإرسال: ' + e.message);
+            }
+        }
+
+        // ===== قطع =====
+        function disconnect() {
+            console.log('🔴 قطع الاتصال');
+            if (conn) { conn.close(); conn = null; }
+            if (peer) { peer.destroy(); peer = null; }
+            isConnected = false;
+            isReady = false;
+            encKey = null;
+            setStatus('🔹 غير متصل', 'offline');
+            msgInput.disabled = true;
+            sendBtn.disabled = true;
+            myIdBox.classList.add('hidden');
+            connectBox.classList.add('hidden');
+            keyBox.classList.add('hidden');
+            addSystem('🚪 تم قطع الاتصال');
+        }
+
+        // ===== نسخ =====
+        function copyId() {
+            var id = myIdDisplay.textContent;
+            if (!id || id === '...') { addSystem('⚠️ لا يوجد معرف'); return; }
+            navigator.clipboard.writeText(id).then(function() {
+                addSystem('📋 تم نسخ المعرف');
+            }).catch(function() {
+                var input = document.createElement('input');
+                input.value = id;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                addSystem('📋 تم نسخ المعرف');
+            });
+        }
+
+        function copyKey() {
+            var key = keyDisplay.textContent;
+            if (!key || key === '...') { addSystem('⚠️ لا يوجد مفتاح'); return; }
+            navigator.clipboard.writeText(key).then(function() {
+                addSystem('📋 تم نسخ المفتاح');
+            }).catch(function() {
+                var input = document.createElement('input');
+                input.value = key;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                addSystem('📋 تم نسخ المفتاح');
+            });
+        }
+
+        // =========================================
+        // ربط الأزرار (بأبسط طريقة ممكنة)
+        // =========================================
+
+        document.getElementById('createBtn').onclick = createRoom;
+        document.getElementById('joinBtn').onclick = joinRoom;
+        document.getElementById('disconnectBtn').onclick = disconnect;
+        document.getElementById('connectBtn').onclick = connectToPeer;
+        document.getElementById('copyIdBtn').onclick = copyId;
+        document.getElementById('copyKeyBtn').onclick = copyKey;
+        sendBtn.onclick = sendMessage;
+
+        msgInput.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+
+        targetInput.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                connectToPeer();
+            }
+        };
+
+        addSystem('✅ مرحباً بك في سِرب!');
+        addSystem('💡 أنشئ غرفة أو انضم لغرفة');
+    </script>
+</body>
+</html>
